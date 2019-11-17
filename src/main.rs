@@ -1,5 +1,10 @@
 mod error;
-use async_std::{io::BufReader, net::TcpListener, prelude::*, task};
+use async_std::{
+    io::BufReader,
+    net::{TcpListener, TcpStream},
+    prelude::*,
+    task,
+};
 use error::Error;
 
 type Result<T> = std::result::Result<T, Error>;
@@ -41,21 +46,28 @@ fn parse_command(req_s: &str) -> Result<Command> {
 
 async fn main_loop() -> Result<()> {
     let listener = TcpListener::bind("127.0.0.1:8888").await?;
-
     let mut incoming = listener.incoming();
-    while let Some(stream) = incoming.next().await {
-        let stream = stream?;
-        println!("Incoming stream from '{:?}'", stream.peer_addr()?);
-        let reader = BufReader::new(stream);
-        let mut lines = reader.lines();
-        while let Some(line) = lines.next().await {
-            let line = line?;
-            let command = parse_command(line.as_ref())?;
-            println!("Received command: {:?}", command);
+    while let Some(Ok(stream)) = incoming.next().await {
+        task::spawn(async { connection_loop(stream).await });
+    }
+    Ok(())
+}
+
+async fn connection_loop(stream: TcpStream) -> Result<()> {
+    println!("Incoming stream from '{:?}'", stream.peer_addr()?);
+    let reader = BufReader::new(stream);
+    let mut lines = reader.lines();
+    while let Some(Ok(line)) = lines.next().await {
+        match parse_command(line.as_ref()) {
+            Ok(command) => handle_command(command).await,
+            Err(e) => println!("Error: {}", e),
         }
     }
-
     Ok(())
+}
+
+async fn handle_command(command: Command) {
+    println!("Command received: {:?}", command);
 }
 
 fn main() {
