@@ -1,6 +1,8 @@
+mod error;
 use async_std::{io::BufReader, net::TcpListener, prelude::*, task};
+use error::Error;
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
 enum Command {
@@ -33,7 +35,7 @@ fn parse_command(req_s: &str) -> Result<Command> {
                 panic!("Invalid inputs length, expected 2 got {}", req_v.len());
             }
         }
-        _ => panic!("No matched command"),
+        _ => Err(Error::InvalidCommand(req_v[0].to_owned())),
     }
 }
 
