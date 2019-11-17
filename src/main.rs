@@ -18,24 +18,24 @@ fn parse_command(req_s: &str) -> Result<Command> {
             if req_v.len() == 2 {
                 Ok(Command::Get(req_v[1].to_owned()))
             } else {
-                panic!("Invalid inputs length, expected 2 got {}", req_v.len());
+                Err(Error::InvalidRequest)
             }
         }
         "put" => {
             if req_v.len() == 3 {
                 Ok(Command::Put(req_v[1].to_owned(), req_v[2].to_owned()))
             } else {
-                panic!("Invalid inputs length, expected 2 got {}", req_v.len());
+                Err(Error::InvalidRequest)
             }
         }
         "succ" => {
             if req_v.len() == 2 {
                 Ok(Command::Succ(req_v[1].to_owned()))
             } else {
-                panic!("Invalid inputs length, expected 2 got {}", req_v.len());
+                Err(Error::InvalidRequest)
             }
         }
-        _ => Err(Error::InvalidCommand(req_v[0].to_owned())),
+        _ => Err(Error::InvalidRequest),
     }
 }
 
@@ -64,6 +64,4 @@ fn main() {
         Ok(..) => println!("Server exited"),
         Err(e) => println!("Server exited with unexpected error: {}", e),
     }
-
-    println!("Hello, world!");
 }

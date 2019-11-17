@@ -5,7 +5,7 @@ use std::{error, fmt};
 
 #[derive(Debug)]
 pub enum Error {
-    InvalidCommand(String),
+    InvalidRequest,
     Io(std::io::Error),
 }
 
@@ -25,7 +25,7 @@ impl fmt::Display for Error {
         use Error::*;
 
         match self {
-            InvalidCommand(c) => write!(f, "Invalid command {}", c),
+            InvalidRequest => write!(f, "Invalid request"),
             Io(e) => e.fmt(f),
         }
     }
