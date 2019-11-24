@@ -1,6 +1,9 @@
 use bytes::Bytes;
+use ring::digest::{digest, SHA256};
 use std::collections::HashMap;
 
+/// Key struct of hash table. `inner` field represents key hash.
+/// given string would be hashed with SHA256 and truncated into 32 bits.
 #[derive(Eq, PartialEq, Hash, Clone)]
 pub struct Key {
     inner: Bytes,
@@ -8,8 +11,10 @@ pub struct Key {
 
 impl Key {
     pub fn new(s: String) -> Self {
+        let hashed = digest(&SHA256, &Bytes::from(s));
+
         Self {
-            inner: Bytes::from(s),
+            inner: Bytes::from(&hashed.as_ref()[0..4]),
         }
     }
 }
