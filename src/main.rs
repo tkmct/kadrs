@@ -73,14 +73,14 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
             Ok(command) => match command {
                 Command::Get(k) => {
                     let table = table.lock().await;
-                    if let Some(v) = table.get(Bytes::from(k)) {
+                    if let Some(v) = table.get(k.into()) {
                         let mut stream = &*stream;
                         stream.write_all(v).await?;
                     }
                 }
                 Command::Put(k, v) => {
                     let mut table = table.lock().await;
-                    let _ = table.put(Bytes::from(k), Bytes::from(v));
+                    let _ = table.put(k.into(), Bytes::from(v));
                 }
                 Command::Succ(_k) => {
                     println!("Successor");
