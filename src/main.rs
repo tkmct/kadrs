@@ -1,4 +1,6 @@
 mod error;
+mod hash_table;
+
 use async_std::{
     io::BufReader,
     net::{TcpListener, TcpStream},

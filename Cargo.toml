@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 async-std = "1.0.1"
+ring = "0.16.9"
+bytes = "0.4.12"
