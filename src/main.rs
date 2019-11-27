@@ -88,6 +88,7 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
                     if let Some(v) = table.get(k.into()) {
                         let mut stream = &*stream;
                         stream.write_all(v).await?;
+                        stream.write(b"\n").await?;
                     }
                 }
                 Command::Put(k, v) => {
