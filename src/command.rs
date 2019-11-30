@@ -1,41 +1,59 @@
-use super::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    key::Key,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Command {
-    Get(String),
-    Put(String, String),
-    Succ(String),
+    Ping,
+    Store(Key, Vec<u8>),
+    FindNode(Key),
+    FindValue(Key),
 }
+
+const PING: &'static str = "PING";
+const STORE: &'static str = "STORE";
+const FIND_NODE: &'static str = "FIND_NODE";
+const FIND_VALUE: &'static str = "FIND_VALUE";
 
 pub fn parse_command(req_s: &str) -> Result<Command> {
     let req_v: Vec<&str> = req_s.split(' ').collect();
     match req_v[0] {
-        "get" => {
-            if req_v.len() == 2 {
-                Ok(Command::Get(req_v[1].to_owned()))
+        PING => {
+            if req_v.len() == 1 {
+                Ok(Command::Ping)
             } else {
-                Err(Error::InvalidRequest(format!(
-                    "expected argument length for `get` 1, given {}",
-                    req_v.len() - 1
-                )))
+                Err(Error::InvalidRequest(
+                    "method `PING` does not receive arguments".to_owned(),
+                ))
             }
         }
-        "put" => {
+        STORE => {
             if req_v.len() == 3 {
-                Ok(Command::Put(req_v[1].to_owned(), req_v[2].to_owned()))
+                Ok(Command::Store(req_v[1].to_owned().into(), req_v[2].into()))
             } else {
                 Err(Error::InvalidRequest(format!(
-                    "expected argument length for `put` 2, given {}",
+                    "expected argument length for `STORE` 2, given {}",
                     req_v.len() - 1
                 )))
             }
         }
-        "succ" => {
+        FIND_NODE => {
             if req_v.len() == 2 {
-                Ok(Command::Succ(req_v[1].to_owned()))
+                Ok(Command::FindNode(req_v[1].into()))
             } else {
                 Err(Error::InvalidRequest(format!(
-                    "expected argument length for `succ` 1, given {}",
+                    "expected argument length for `FIND_NODE` 1, given {}",
+                    req_v.len() - 1
+                )))
+            }
+        }
+        FIND_VALUE => {
+            if req_v.len() == 2 {
+                Ok(Command::FindValue(req_v[1].into()))
+            } else {
+                Err(Error::InvalidRequest(format!(
+                    "expected argument length for `FIND_VALUE` 1, given {}",
                     req_v.len() - 1
                 )))
             }
@@ -52,26 +70,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_get() {
-        let command_str = "get key";
+    fn test_parse_ping() {
+        let command_str = "PING";
         let parsed = parse_command(command_str).unwrap();
-        assert_eq!(Command::Get("key".to_owned()), parsed);
+        assert_eq!(Command::Ping, parsed);
     }
 
     #[test]
-    fn test_parse_put() {
-        let command_str = "put key val";
+    fn test_parse_store() {
+        let command_str = "STORE key val";
         let parsed = parse_command(command_str).unwrap();
-        assert_eq!(Command::Put("key".to_owned(), "val".to_owned()), parsed);
+        assert_eq!(Command::Store("key".into(), "val".into()), parsed);
     }
 
     #[test]
-    fn test_parse_get_fail() {
-        let command_str = "get key key2";
-        let parsed = parse_command(command_str);
-        assert!(
-            parsed.is_err(),
-            "get command should fail when passed two args"
-        );
+    fn test_parse_find_node() {
+        let command_str = "FIND_NODE key";
+        let parsed = parse_command(command_str).unwrap();
+        assert_eq!(parsed, Command::FindNode("key".into()));
+    }
+
+    #[test]
+    fn test_parse_find_value() {
+        let command_str = "FIND_VALUE key";
+        let parsed = parse_command(command_str).unwrap();
+        assert_eq!(parsed, Command::FindValue("key".into()));
     }
 }

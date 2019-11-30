@@ -37,20 +37,19 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
     while let Some(Ok(line)) = lines.next().await {
         match parse_command(line.as_ref()) {
             Ok(command) => match command {
-                Command::Get(k) => {
+                Command::Ping => unimplemented!(),
+                Command::FindValue(k) => {
                     let table = table.lock().await;
-                    if let Some(v) = table.get(k.into()) {
+                    if let Some(v) = table.get(k) {
                         let mut stream = &*stream;
                         stream.write_all(v).await?;
                         stream.write(b"\n").await?;
                     }
                 }
-                Command::Put(k, v) => {
+                Command::FindNode(k) => unimplemented!(),
+                Command::Store(k, v) => {
                     let mut table = table.lock().await;
                     let _ = table.put(k.into(), v.into());
-                }
-                Command::Succ(_k) => {
-                    println!("Successor");
                 }
             },
             Err(e) => println!("Error: {}", e),
