@@ -1,8 +1,8 @@
-mod command;
 mod error;
 mod in_memory_hash_table;
 mod key;
 mod node;
+mod rpc;
 
 use {
     async_std::{
@@ -12,9 +12,9 @@ use {
         sync::Mutex,
         task,
     },
-    command::Command,
     error::Result,
     in_memory_hash_table::Table,
+    rpc::Rpc,
     std::sync::Arc,
 };
 
@@ -35,11 +35,11 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
     let reader = BufReader::new(&*stream);
     let mut lines = reader.lines();
     while let Some(Ok(line)) = lines.next().await {
-        let command: Result<Command> = line.parse();
-        match command {
-            Ok(command) => match command {
-                Command::Ping => unimplemented!("unimplemented command PING"),
-                Command::FindValue(k) => {
+        let req: Result<Rpc> = line.parse();
+        match req {
+            Ok(req) => match req {
+                Rpc::Ping => unimplemented!("unimplemented PING"),
+                Rpc::FindValue(k) => {
                     let table = table.lock().await;
                     if let Some(v) = table.get(k) {
                         let mut stream = &*stream;
@@ -47,8 +47,8 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
                         stream.write(b"\n").await?;
                     }
                 }
-                Command::FindNode(_k) => unimplemented!("unimplemented command FIND_NODE"),
-                Command::Store(k, v) => {
+                Rpc::FindNode(_k) => unimplemented!("unimplemented FIND_NODE"),
+                Rpc::Store(k, v) => {
                     let mut table = table.lock().await;
                     let _ = table.put(k.into(), v.into());
                 }
