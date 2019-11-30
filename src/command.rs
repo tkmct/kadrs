@@ -1,6 +1,6 @@
 use super::error::{Error, Result};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Command {
     Get(String),
     Put(String, String),
@@ -44,5 +44,34 @@ pub fn parse_command(req_s: &str) -> Result<Command> {
             "Command not found: {}",
             req_v[0]
         ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_get() {
+        let command_str = "get key";
+        let parsed = parse_command(command_str).unwrap();
+        assert_eq!(Command::Get("key".to_owned()), parsed);
+    }
+
+    #[test]
+    fn test_parse_put() {
+        let command_str = "put key val";
+        let parsed = parse_command(command_str).unwrap();
+        assert_eq!(Command::Put("key".to_owned(), "val".to_owned()), parsed);
+    }
+
+    #[test]
+    fn test_parse_get_fail() {
+        let command_str = "get key key2";
+        let parsed = parse_command(command_str);
+        assert!(
+            parsed.is_err(),
+            "get command should fail when passed two args"
+        );
     }
 }
