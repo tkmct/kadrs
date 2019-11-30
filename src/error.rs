@@ -3,6 +3,8 @@
 // InvalidArgumentLength {expected, given}
 use std::{error, fmt};
 
+pub type Result<T> = std::result::Result<T, Error>;
+
 #[derive(Debug)]
 pub enum Error {
     InvalidRequest(String),
