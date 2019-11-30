@@ -11,8 +11,8 @@ impl Table {
         }
     }
 
-    pub fn get(&self, key: Key) -> Option<&Vec<u8>> {
-        self.inner.get(&key)
+    pub fn get(&self, key: &Key) -> Option<&Vec<u8>> {
+        self.inner.get(key)
     }
 
     pub fn put(&mut self, key: Key, value: Vec<u8>) -> Option<Vec<u8>> {
@@ -31,7 +31,7 @@ mod tests {
         let mut table = Table::new();
         let put_result = table.put(key.clone(), value.clone());
         assert_eq!(put_result, None);
-        let get_result = table.get(key).unwrap();
+        let get_result = table.get(&key).unwrap();
         assert_eq!(get_result, &value);
     }
 }

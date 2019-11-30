@@ -11,6 +11,8 @@ pub enum Error {
     RequestParse(String),
     Io(std::io::Error),
     AddrParse(std::net::AddrParseError),
+    // TODO: remove
+    NotFound,
 }
 
 impl error::Error for Error {
@@ -33,6 +35,7 @@ impl fmt::Display for Error {
             RequestParse(invalid_str) => write!(f, "Cannot parse request string: {}", invalid_str),
             Io(e) => e.fmt(f),
             AddrParse(e) => e.fmt(f),
+            NotFound => write!(f, "not found"),
         }
     }
 }

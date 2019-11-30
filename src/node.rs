@@ -37,4 +37,12 @@ impl Node {
             local_table: Table::new(),
         })
     }
+
+    pub fn find_value(&self, key: &Key) -> Option<Vec<u8>> {
+        self.local_table.get(key).and_then(|v| Some(v.clone()))
+    }
+
+    pub fn store(&mut self, key: Key, value: Vec<u8>) {
+        self.local_table.put(key, value);
+    }
 }
