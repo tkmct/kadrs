@@ -1,7 +1,8 @@
 mod command;
 mod error;
-mod hash_table;
+mod in_memory_hash_table;
 mod key;
+mod node;
 
 use {
     async_std::{
@@ -13,7 +14,7 @@ use {
     },
     command::{parse_command, Command},
     error::Result,
-    hash_table::Table,
+    in_memory_hash_table::Table,
     std::sync::Arc,
 };
 

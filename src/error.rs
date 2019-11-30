@@ -9,6 +9,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     InvalidRequest(String),
     Io(std::io::Error),
+    AddrParse(std::net::AddrParseError),
 }
 
 impl error::Error for Error {
@@ -29,6 +30,7 @@ impl fmt::Display for Error {
         match self {
             InvalidRequest(msg) => write!(f, "Invalid request: {}", msg),
             Io(e) => e.fmt(f),
+            AddrParse(e) => e.fmt(f),
         }
     }
 }
@@ -36,5 +38,11 @@ impl fmt::Display for Error {
 impl From<std::io::Error> for Error {
     fn from(error: std::io::Error) -> Self {
         Error::Io(error)
+    }
+}
+
+impl From<std::net::AddrParseError> for Error {
+    fn from(error: std::net::AddrParseError) -> Self {
+        Error::AddrParse(error)
     }
 }
