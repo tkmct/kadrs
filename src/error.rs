@@ -8,6 +8,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     InvalidRequest(String),
+    CommandParse(String),
     Io(std::io::Error),
     AddrParse(std::net::AddrParseError),
 }
@@ -29,6 +30,7 @@ impl fmt::Display for Error {
 
         match self {
             InvalidRequest(msg) => write!(f, "Invalid request: {}", msg),
+            CommandParse(invalid_str) => write!(f, "Invalid command string: {}", invalid_str),
             Io(e) => e.fmt(f),
             AddrParse(e) => e.fmt(f),
         }

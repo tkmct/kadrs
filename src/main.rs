@@ -12,7 +12,7 @@ use {
         sync::Mutex,
         task,
     },
-    command::{parse_command, Command},
+    command::Command,
     error::Result,
     in_memory_hash_table::Table,
     std::sync::Arc,
@@ -35,9 +35,10 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
     let reader = BufReader::new(&*stream);
     let mut lines = reader.lines();
     while let Some(Ok(line)) = lines.next().await {
-        match parse_command(line.as_ref()) {
+        let command: Result<Command> = line.parse();
+        match command {
             Ok(command) => match command {
-                Command::Ping => unimplemented!(),
+                Command::Ping => unimplemented!("unimplemented command PING"),
                 Command::FindValue(k) => {
                     let table = table.lock().await;
                     if let Some(v) = table.get(k) {
@@ -46,7 +47,7 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
                         stream.write(b"\n").await?;
                     }
                 }
-                Command::FindNode(k) => unimplemented!(),
+                Command::FindNode(_k) => unimplemented!("unimplemented command FIND_NODE"),
                 Command::Store(k, v) => {
                     let mut table = table.lock().await;
                     let _ = table.put(k.into(), v.into());
