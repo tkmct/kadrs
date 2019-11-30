@@ -1,6 +1,7 @@
 mod command;
 mod error;
 mod hash_table;
+mod key;
 
 use {
     async_std::{
