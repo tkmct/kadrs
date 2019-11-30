@@ -58,8 +58,9 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
     Ok(())
 }
 
-fn main() {
-    let result = task::block_on(main_loop());
+#[async_std::main]
+async fn main() {
+    let result = main_loop().await;
     match result {
         Ok(..) => println!("Server exited"),
         Err(e) => println!("Server exited with unexpected error: {}", e),

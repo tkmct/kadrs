@@ -12,9 +12,8 @@ pub struct Key {
 impl Key {
     pub fn new(s: String) -> Self {
         let hashed = digest(&SHA256, &Bytes::from(s));
-
         Self {
-            inner: Bytes::from(&hashed.as_ref()[0..4]),
+            inner: Vec::from(&hashed.as_ref()[0..4]).into(),
         }
     }
 }
