@@ -10,7 +10,6 @@ use {
         sync::Mutex,
         task,
     },
-    bytes::Bytes,
     command::{parse_command, Command},
     error::Result,
     hash_table::Table,
@@ -46,7 +45,7 @@ async fn connection_loop(stream: TcpStream, table: Arc<Mutex<Table>>) -> Result<
                 }
                 Command::Put(k, v) => {
                     let mut table = table.lock().await;
-                    let _ = table.put(k.into(), Bytes::from(v));
+                    let _ = table.put(k.into(), v.into());
                 }
                 Command::Succ(_k) => {
                     println!("Successor");
