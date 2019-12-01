@@ -9,7 +9,7 @@ use {
         io::BufReader,
         net::{TcpListener, TcpStream},
         prelude::*,
-        sync::Mutex,
+        sync::RwLock,
         task,
     },
     error::Result,
@@ -19,7 +19,7 @@ use {
 };
 
 async fn main_loop() -> Result<()> {
-    let node = Arc::new(Mutex::new(Node::new("127.0.0.1", 8888)?));
+    let node = Arc::new(RwLock::new(Node::new("127.0.0.1", 8888)?));
     let listener = TcpListener::bind("127.0.0.1:8888").await?;
     let mut incoming = listener.incoming();
     while let Some(Ok(stream)) = incoming.next().await {
@@ -29,7 +29,7 @@ async fn main_loop() -> Result<()> {
     Ok(())
 }
 
-async fn connection_loop(stream: TcpStream, node: Arc<Mutex<Node>>) -> Result<()> {
+async fn connection_loop(stream: TcpStream, node: Arc<RwLock<Node>>) -> Result<()> {
     println!("Incoming stream from '{:?}'", stream.peer_addr()?);
     let stream = Arc::new(stream);
     let reader = BufReader::new(&*stream);
@@ -40,7 +40,7 @@ async fn connection_loop(stream: TcpStream, node: Arc<Mutex<Node>>) -> Result<()
             Ok(req) => match req {
                 Rpc::Ping => unimplemented!("unimplemented PING"),
                 Rpc::FindValue(k) => {
-                    let node = node.lock().await;
+                    let node = node.read().await;
                     if let Some(v) = node.find_value(&k) {
                         let mut stream = &*stream;
                         stream.write_all(v.as_ref()).await?;
@@ -49,7 +49,7 @@ async fn connection_loop(stream: TcpStream, node: Arc<Mutex<Node>>) -> Result<()
                 }
                 Rpc::FindNode(_k) => unimplemented!("unimplemented FIND_NODE"),
                 Rpc::Store(k, v) => {
-                    let mut node = node.lock().await;
+                    let mut node = node.write().await;
                     let _ = node.store(k.into(), v.into());
                 }
             },
