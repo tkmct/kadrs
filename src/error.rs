@@ -9,10 +9,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     InvalidRequest(String),
     RequestParse(String),
+
+    IndexOutOfBounds(usize, usize),
+    MaxCapacity,
+
     Io(std::io::Error),
     AddrParse(std::net::AddrParseError),
-    // TODO: remove
-    NotFound,
 }
 
 impl error::Error for Error {
@@ -33,9 +35,14 @@ impl fmt::Display for Error {
         match self {
             InvalidRequest(msg) => write!(f, "Invalid request: {}", msg),
             RequestParse(invalid_str) => write!(f, "Cannot parse request string: {}", invalid_str),
+            IndexOutOfBounds(received, bounds) => write!(
+                f,
+                "Index out of bounds, given {}, expected smaller than {}",
+                received, bounds
+            ),
+            MaxCapacity => write!(f, "Exceed capacity"),
             Io(e) => e.fmt(f),
             AddrParse(e) => e.fmt(f),
-            NotFound => write!(f, "not found"),
         }
     }
 }

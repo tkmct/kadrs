@@ -9,6 +9,10 @@ pub struct NodeInfo {
 }
 
 impl NodeInfo {
+    pub fn get_id(&self) -> &Key {
+        &self.id
+    }
+
     pub fn new(addr: &str, port: u16, id: Key) -> Result<Self> {
         let addr: Ipv4Addr = addr.parse()?;
         Ok(Self {

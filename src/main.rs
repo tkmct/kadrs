@@ -1,3 +1,4 @@
+mod bucket;
 mod error;
 mod in_memory_hash_table;
 mod key;
