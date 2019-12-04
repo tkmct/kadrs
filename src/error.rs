@@ -1,6 +1,7 @@
 // Errors
 // CommandDoesNotMatch {command_string}
 // InvalidArgumentLength {expected, given}
+use crate::node::NodeInfo;
 use std::{error, fmt};
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -11,10 +12,10 @@ pub enum Error {
     RequestParse(String),
 
     IndexOutOfBounds(usize, usize),
-    MaxCapacity,
 
     Io(std::io::Error),
     AddrParse(std::net::AddrParseError),
+    CapacityError(arrayvec::CapacityError<NodeInfo>),
 }
 
 impl error::Error for Error {
@@ -23,6 +24,8 @@ impl error::Error for Error {
 
         match self {
             Io(e) => Some(e),
+            AddrParse(e) => Some(e),
+            CapacityError(e) => Some(e),
             _ => None,
         }
     }
@@ -40,9 +43,9 @@ impl fmt::Display for Error {
                 "Index out of bounds, given {}, expected smaller than {}",
                 received, bounds
             ),
-            MaxCapacity => write!(f, "Exceed capacity"),
             Io(e) => e.fmt(f),
             AddrParse(e) => e.fmt(f),
+            CapacityError(e) => e.fmt(f),
         }
     }
 }
@@ -56,5 +59,11 @@ impl From<std::io::Error> for Error {
 impl From<std::net::AddrParseError> for Error {
     fn from(error: std::net::AddrParseError) -> Self {
         Error::AddrParse(error)
+    }
+}
+
+impl From<arrayvec::CapacityError<NodeInfo>> for Error {
+    fn from(error: arrayvec::CapacityError<NodeInfo>) -> Self {
+        Error::CapacityError(error)
     }
 }
