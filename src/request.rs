@@ -3,7 +3,7 @@ use {
     serde::{Deserialize, Serialize},
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Request {
     node_info: NodeInfo,
     rpc: Rpc,
