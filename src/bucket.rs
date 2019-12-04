@@ -8,7 +8,7 @@ use {
 };
 
 // TODO: use const generics if ready
-const K: usize = 20;
+const K: usize = 10;
 
 /// let 0 <= i < 160, store k nodes info whose distance is 2^i <= d < 2^(i+1) far.
 /// bucket has at most k nodes
@@ -54,7 +54,17 @@ impl Bucket {
 
     /// update bucket with given node_info in rule specified above.
     //TODO: PING is not implemented yet.
-    pub fn update(&mut self, node_info: NodeInfo) {}
+    pub fn update(&mut self, node_info: NodeInfo) {
+        if let Some(index) = self.nodes.iter().position(|n| *n == node_info) {
+            let _ = self.move_to_tail(index);
+        } else if !self.nodes.is_full() {
+            let _ = self.push_back(node_info);
+        } else {
+            // TODO: ping least-recently seen node which on the head and set it to tail if pong
+            // if it doesn't respond, evict it and push new node at the tail
+            let _ = self.move_to_tail(0);
+        }
+    }
 }
 
 /// kBucket implementation
@@ -126,5 +136,55 @@ mod tests {
         let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key2".into()).unwrap());
         let res = bucket.move_to_tail(2);
         assert!(res.is_err(), "fail move to tail");
+    }
+
+    #[test]
+    fn test_update_bucket_with_one_already_in_the_bucket() {
+        let node2 = NodeInfo::new("127.0.0.1", 2002, "key2".into()).unwrap();
+        let mut bucket = Bucket::new();
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key1".into()).unwrap());
+        let _ = bucket.push_back(node2.clone());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key3".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key4".into()).unwrap());
+
+        bucket.update(node2.clone());
+        assert_eq!(bucket.nodes.last().unwrap(), &node2);
+    }
+
+    #[test]
+    fn test_update_bucket_new_node() {
+        let mut bucket = Bucket::new();
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key1".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key2".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key3".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key4".into()).unwrap());
+
+        let node = NodeInfo::new("127.0.0.1", 2002, "new_key".into()).unwrap();
+
+        bucket.update(node.clone());
+        assert_eq!(bucket.nodes.last().unwrap(), &node);
+    }
+
+    // TODO: change when ping is implemented
+    #[test]
+    fn test_update_full_bucket_new_node() {
+        let mut bucket = Bucket::new();
+
+        let node1 = NodeInfo::new("127.0.0.1", 2002, "key1".into()).unwrap();
+        let _ = bucket.push_back(node1.clone());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key2".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key3".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key4".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key5".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key6".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key7".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key8".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key9".into()).unwrap());
+        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key10".into()).unwrap());
+
+        let node = NodeInfo::new("127.0.0.1", 2002, "new_key".into()).unwrap();
+
+        bucket.update(node.clone());
+        assert_eq!(bucket.nodes.last().unwrap(), &node1);
     }
 }

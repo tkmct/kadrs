@@ -3,7 +3,7 @@ use {
     std::net::{Ipv4Addr, SocketAddrV4},
 };
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct NodeInfo {
     host: SocketAddrV4,
     id: Key,
