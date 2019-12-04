@@ -1,9 +1,10 @@
 use {
-    crate::{error::Result, in_memory_hash_table::Table, key::Key},
+    crate::{bucket::KBucket, error::Result, in_memory_hash_table::Table, key::Key},
+    serde::{Deserialize, Serialize},
     std::net::{Ipv4Addr, SocketAddrV4},
 };
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
 pub struct NodeInfo {
     host: SocketAddrV4,
     id: Key,
@@ -27,6 +28,7 @@ pub struct Node {
     id: Key,
     host: SocketAddrV4,
     local_table: Table,
+    k_bucket: KBucket,
 }
 
 impl Node {
@@ -40,6 +42,7 @@ impl Node {
             host,
             id,
             local_table: Table::new(),
+            k_bucket: KBucket::new(),
         })
     }
 
@@ -49,5 +52,9 @@ impl Node {
 
     pub fn store(&mut self, key: Key, value: Vec<u8>) {
         self.local_table.put(key, value);
+    }
+
+    pub fn update_bucket(&mut self, node_info: NodeInfo) {
+        self.k_bucket.update_bucket(node_info)
     }
 }

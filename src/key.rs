@@ -1,9 +1,12 @@
-use ring::digest::{digest, SHA256};
+use {
+    ring::digest::{digest, SHA256},
+    serde::{Deserialize, Serialize},
+};
 
 /// Key struct represents Key of (Key, Value) pair and ID of nodes.
 /// id and key are represented as 160-bit identifier.
 /// distance between two keys are calcuated using XOR.
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug, Serialize, Deserialize)]
 pub struct Key([u8; 20]);
 
 impl Key {

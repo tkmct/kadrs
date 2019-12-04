@@ -1,9 +1,10 @@
 use {
     crate::{error::Error, key::Key},
+    serde::{Deserialize, Serialize},
     std::str::FromStr,
 };
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Rpc {
     /// PING is used to check if node is online
     /// request must be exact string with `PING`

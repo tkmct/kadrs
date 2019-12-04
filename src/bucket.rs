@@ -69,11 +69,11 @@ impl Bucket {
 
 /// kBucket implementation
 /// store k nodes in single bucket
-pub struct kBucket {
+pub struct KBucket {
     buckets: [Bucket; 160],
 }
 
-impl kBucket {
+impl KBucket {
     pub fn new() -> Self {
         let mut buckets: [Bucket; 160] = unsafe { MaybeUninit::uninit().assume_init() };
         for i in buckets.iter_mut() {

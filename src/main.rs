@@ -3,6 +3,7 @@ mod error;
 mod in_memory_hash_table;
 mod key;
 mod node;
+mod request;
 mod rpc;
 
 use {
@@ -15,6 +16,7 @@ use {
     },
     error::Result,
     node::Node,
+    request::Request,
     rpc::Rpc,
     std::sync::Arc,
 };
@@ -36,26 +38,29 @@ async fn connection_loop(stream: TcpStream, node: Arc<RwLock<Node>>) -> Result<(
     let reader = BufReader::new(&*stream);
     let mut lines = reader.lines();
     while let Some(Ok(line)) = lines.next().await {
-        let req: Result<Rpc> = line.parse();
-        match req {
-            Ok(req) => match req {
-                Rpc::Ping => unimplemented!("unimplemented PING"),
-                Rpc::FindValue(k) => {
-                    let node = node.read().await;
-                    if let Some(v) = node.find_value(&k) {
-                        let mut stream = &*stream;
-                        stream.write_all(v.as_ref()).await?;
-                        stream.write(b"\n").await?;
-                    }
-                }
-                Rpc::FindNode(_k) => unimplemented!("unimplemented FIND_NODE"),
-                Rpc::Store(k, v) => {
-                    let mut node = node.write().await;
-                    let _ = node.store(k.into(), v.into());
-                }
-            },
-            Err(e) => println!("Error: {}", e),
+        let deserialized = serde_json::from_str::<Request>(&line);
+        if deserialized.is_err() {
+            continue;
         }
+        let req = deserialized.unwrap();
+        match req.get_rpc() {
+            Rpc::Ping => unimplemented!("unimplemented PING"),
+            Rpc::FindValue(k) => {
+                let node = node.read().await;
+                if let Some(v) = node.find_value(&k) {
+                    let mut stream = &*stream;
+                    stream.write_all(v.as_ref()).await?;
+                    stream.write(b"\n").await?;
+                }
+            }
+            Rpc::FindNode(_k) => unimplemented!("unimplemented FIND_NODE"),
+            Rpc::Store(k, v) => {
+                let mut node = node.write().await;
+                let _ = node.store(k.clone(), v.clone());
+            }
+        }
+        let mut node = node.write().await;
+        node.update_bucket(req.get_node_info().clone());
     }
     Ok(())
 }
