@@ -5,17 +5,17 @@ use {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Request {
-    node_info: NodeInfo,
+    node_info: Option<NodeInfo>,
     rpc: Rpc,
 }
 
 impl Request {
-    pub fn new(node_info: NodeInfo, rpc: Rpc) -> Self {
+    pub fn new(node_info: Option<NodeInfo>, rpc: Rpc) -> Self {
         Self { node_info, rpc }
     }
 
-    pub fn get_node_info(&self) -> &NodeInfo {
-        &self.node_info
+    pub fn get_node_info(&self) -> Option<&NodeInfo> {
+        self.node_info.as_ref()
     }
 
     pub fn get_rpc(&self) -> &Rpc {

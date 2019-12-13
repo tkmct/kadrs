@@ -1,3 +1,5 @@
+#![feature(try_trait)]
+
 pub mod bucket;
 pub mod error;
 pub mod in_memory_hash_table;

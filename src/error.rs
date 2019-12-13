@@ -12,10 +12,13 @@ pub enum Error {
     RequestParse(String),
 
     IndexOutOfBounds(usize, usize),
+    FromUtf8(std::string::FromUtf8Error),
 
+    SerdeJson(serde_json::error::Error),
     Io(std::io::Error),
     AddrParse(std::net::AddrParseError),
     CapacityError(arrayvec::CapacityError<NodeInfo>),
+    NoneError,
 }
 
 impl error::Error for Error {
@@ -26,6 +29,8 @@ impl error::Error for Error {
             Io(e) => Some(e),
             AddrParse(e) => Some(e),
             CapacityError(e) => Some(e),
+            SerdeJson(e) => Some(e),
+            FromUtf8(e) => Some(e),
             _ => None,
         }
     }
@@ -43,9 +48,12 @@ impl fmt::Display for Error {
                 "Index out of bounds, given {}, expected smaller than {}",
                 received, bounds
             ),
+            FromUtf8(e) => e.fmt(f),
             Io(e) => e.fmt(f),
             AddrParse(e) => e.fmt(f),
             CapacityError(e) => e.fmt(f),
+            SerdeJson(e) => e.fmt(f),
+            NoneError => write!(f, "NoneError"),
         }
     }
 }
@@ -65,5 +73,23 @@ impl From<std::net::AddrParseError> for Error {
 impl From<arrayvec::CapacityError<NodeInfo>> for Error {
     fn from(error: arrayvec::CapacityError<NodeInfo>) -> Self {
         Error::CapacityError(error)
+    }
+}
+
+impl From<std::option::NoneError> for Error {
+    fn from(_: std::option::NoneError) -> Self {
+        Error::NoneError
+    }
+}
+
+impl From<serde_json::error::Error> for Error {
+    fn from(error: serde_json::error::Error) -> Self {
+        Error::SerdeJson(error)
+    }
+}
+
+impl From<std::string::FromUtf8Error> for Error {
+    fn from(error: std::string::FromUtf8Error) -> Self {
+        Error::FromUtf8(error)
     }
 }

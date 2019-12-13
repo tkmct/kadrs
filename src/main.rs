@@ -1,3 +1,5 @@
+#![feature(try_trait)]
+
 mod bucket;
 mod error;
 mod in_memory_hash_table;
@@ -62,7 +64,10 @@ async fn connection_loop(stream: TcpStream, node: Arc<RwLock<Node>>) -> Result<(
             }
         }
         let mut node = node.write().await;
-        node.update_bucket(req.get_node_info().clone());
+        match req.get_node_info() {
+            Some(n) => node.update_bucket(n.clone()),
+            _ => {}
+        }
     }
     Ok(())
 }
