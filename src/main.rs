@@ -20,12 +20,12 @@ use {
     node::Node,
     request::Request,
     rpc::Rpc,
-    std::sync::Arc,
+    std::{env, net::SocketAddrV4, sync::Arc},
 };
 
-async fn main_loop() -> Result<()> {
-    let node = Arc::new(RwLock::new(Node::new("127.0.0.1", 8888)?));
-    let listener = TcpListener::bind("127.0.0.1:8888").await?;
+async fn start(host: SocketAddrV4) -> Result<()> {
+    let node = Arc::new(RwLock::new(Node::new(host)?));
+    let listener = TcpListener::bind(host).await?;
     let mut incoming = listener.incoming();
     while let Some(Ok(stream)) = incoming.next().await {
         let node = node.clone();
@@ -74,8 +74,12 @@ async fn connection_loop(stream: TcpStream, node: Arc<RwLock<Node>>) -> Result<(
 
 #[async_std::main]
 async fn main() {
-    let result = main_loop().await;
-    match result {
+    let args = env::args().collect::<Vec<String>>();
+    let host: SocketAddrV4 = args[1].parse().unwrap();
+
+    // start a server
+    let server = start(host).await;
+    match server {
         Ok(..) => println!("Server exited"),
         Err(e) => println!("Server exited with unexpected error: {}", e),
     }

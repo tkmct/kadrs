@@ -32,10 +32,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(addr: &str, port: u16) -> Result<Self> {
-        let addr: Ipv4Addr = addr.parse()?;
-        let host = SocketAddrV4::new(addr, port);
-        // generate id from ip address and port
+    pub fn new(host: SocketAddrV4) -> Result<Self> {
         let id = Key::from(format!("{}", host));
 
         Ok(Self {
