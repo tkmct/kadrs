@@ -14,13 +14,15 @@ impl NodeInfo {
     pub fn get_id(&self) -> &Key {
         &self.id
     }
+    pub fn get_host(&self) -> &SocketAddrV4 {
+        &self.host
+    }
+}
 
-    pub fn new(addr: &str, port: u16, id: Key) -> Result<Self> {
-        let addr: Ipv4Addr = addr.parse()?;
-        Ok(Self {
-            host: SocketAddrV4::new(addr, port),
-            id,
-        })
+impl From<SocketAddrV4> for NodeInfo {
+    fn from(host: SocketAddrV4) -> NodeInfo {
+        let id = Key::from(format!("{}", host));
+        NodeInfo { host, id }
     }
 }
 

@@ -16,6 +16,7 @@ use {
         sync::RwLock,
         task,
     },
+    clap::{App, Arg},
     error::Result,
     node::Node,
     request::Request,
@@ -64,7 +65,7 @@ async fn connection_loop(stream: TcpStream, node: Arc<RwLock<Node>>) -> Result<(
             }
         }
         let mut node = node.write().await;
-        match req.get_node_info() {
+        match req.get_from() {
             Some(n) => node.update_bucket(n.clone()),
             _ => {}
         }
@@ -74,8 +75,21 @@ async fn connection_loop(stream: TcpStream, node: Arc<RwLock<Node>>) -> Result<(
 
 #[async_std::main]
 async fn main() {
-    let args = env::args().collect::<Vec<String>>();
-    let host: SocketAddrV4 = args[1].parse().unwrap();
+    let app = App::new("kadrs")
+        .version("0.1.0")
+        .about("server app for kadrs")
+        .arg(Arg::with_name("host").required(true))
+        .arg(Arg::with_name("neighbor"));
+    let matches = app.get_matches();
+    let host: SocketAddrV4 = match matches.value_of("host").unwrap().parse() {
+        Ok(s) => s,
+        Err(_) => panic!("Invalid host string"),
+    };
+    let neighbor: Option<SocketAddrV4> = matches
+        .value_of("neighbor")
+        .map(|s| s.parse().expect("Invalid host string"));
+
+    // Ping neighbor
 
     // start a server
     let server = start(host).await;

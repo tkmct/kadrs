@@ -1,5 +1,4 @@
 use {
-    async_std::{net::TcpStream, prelude::*},
     clap::{App, Arg, ArgMatches, SubCommand},
     kadrs::{
         error::{Error, Result},
@@ -63,17 +62,9 @@ async fn main() -> Result<()> {
     };
 
     let rpc = parse_method(matches)?;
-    let req = Request::new(None, rpc);
-    let req_str = serde_json::to_string(&req)?;
-    println!("Request: {:?} {:?}", host, req);
-
-    let mut stream = TcpStream::connect(host).await?;
-    stream.write_all(req_str.as_bytes()).await?;
-    stream.write("\n".as_bytes()).await?;
-    let mut buf = vec![0u8; 32];
-    let count = stream.read(&mut buf).await?;
-    let res = String::from_utf8(buf[..count].to_vec())?.trim().to_owned();
-    println!("Response: {}", res);
-
+    let req = Request::new(None, rpc, host.into());
+    println!("Request: {:?}", req);
+    let res = req.send().await?;
+    println!("Response: {:?}", res);
     Ok(())
 }
