@@ -58,11 +58,7 @@ impl Node {
     }
 
     pub fn update_bucket(&mut self, node_info: NodeInfo) {
-        self.k_bucket.update_bucket(node_info);
-        self.print_buckets();
-    }
-
-    pub fn print_buckets(&self) {
-        let bucket = &self.k_bucket;
+        let distance = node_info.get_id().distance(&self.id);
+        self.k_bucket.update_bucket(node_info, distance);
     }
 }

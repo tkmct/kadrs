@@ -1,10 +1,11 @@
 use {
     crate::{
         error::{Error, Result},
+        key::Key,
         node::NodeInfo,
     },
     arrayvec::ArrayVec,
-    std::mem::MaybeUninit,
+    std::{fmt, mem::MaybeUninit},
 };
 
 // TODO: use const generics if ready
@@ -18,6 +19,7 @@ const K: usize = 10;
 /// 3. if node is not in the bucket, and bucket is full, ping the least-recently seen node which is
 ///    at the head of the bucket, if it doesn't respond, evict the least-recently seen node and push
 ///    new node at the tail. if it does respond, discard new node.
+#[derive(Debug)]
 pub struct Bucket {
     nodes: ArrayVec<[NodeInfo; K]>,
 }
@@ -67,6 +69,12 @@ impl Bucket {
     }
 }
 
+impl fmt::Display for Bucket {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.nodes)
+    }
+}
+
 /// kBucket implementation
 /// store k nodes in single bucket
 pub struct KBucket {
@@ -83,9 +91,13 @@ impl KBucket {
         Self { buckets }
     }
 
-    pub fn update_bucket(&mut self, node_info: NodeInfo) {
-        let i = node_info.get_id().most_significant_bit();
+    pub fn update_bucket(&mut self, node_info: NodeInfo, distance: Key) {
+        let i = distance.most_significant_bit();
+        println!("most significant bit {}", i);
         self.buckets[i as usize].update(node_info);
+        // for b in self.buckets.iter() {
+        //     println!("{}", b);
+        // }
     }
 }
 
