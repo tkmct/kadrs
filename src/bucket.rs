@@ -93,36 +93,39 @@ impl KBucket {
 mod tests {
     use super::*;
     use crate::key::Key;
+    use std::net::SocketAddrV4;
+
+    fn create_node_info(host: &str, key: &str) -> NodeInfo {
+        let host: SocketAddrV4 = host.parse().unwrap();
+        NodeInfo::new(host, key.into())
+    }
 
     #[test]
     fn test_push_node() {
         let mut bucket = Bucket::new();
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 1999, "key1".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2000, "key2".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key2".into()).unwrap());
+        let _ = bucket.push_back(create_node_info("127.0.0.1:1999", "key1"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2000", "key2"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2001", "key3"));
         assert_eq!(bucket.nodes.len(), 3);
     }
 
     #[test]
     fn test_remove_node() {
         let mut bucket = Bucket::new();
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key1".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key2".into()).unwrap());
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2000", "key1"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2001", "key2"));
         let node_info = bucket.remove(1);
         assert_eq!(bucket.nodes.len(), 1);
-        assert_eq!(
-            node_info,
-            NodeInfo::new("127.0.0.1", 2002, "key2".into()).unwrap()
-        );
+        assert_eq!(node_info, create_node_info("127.0.0.1:2001", "key2"));
     }
 
     #[test]
     fn test_node_move_to_tail() {
         let mut bucket = Bucket::new();
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key1".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key2".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2003, "key3".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2004, "key4".into()).unwrap());
+        let _ = bucket.push_back(create_node_info("127.0.0.1:1999", "key1"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2000", "key2"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2001", "key3"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2002", "key4"));
         let res = bucket.move_to_tail(0);
         assert!(res.is_ok(), "success move to tail");
         let back = bucket.nodes.last().unwrap();
@@ -132,21 +135,20 @@ mod tests {
     #[test]
     fn test_node_move_to_tail_fail() {
         let mut bucket = Bucket::new();
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key1".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key2".into()).unwrap());
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2001", "key1"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2002", "key2"));
         let res = bucket.move_to_tail(2);
         assert!(res.is_err(), "fail move to tail");
     }
 
     #[test]
     fn test_update_bucket_with_one_already_in_the_bucket() {
-        let node2 = NodeInfo::new("127.0.0.1", 2002, "key2".into()).unwrap();
+        let node2 = create_node_info("127.0.0.1:2002", "key2");
         let mut bucket = Bucket::new();
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key1".into()).unwrap());
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2001", "key1"));
         let _ = bucket.push_back(node2.clone());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key3".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key4".into()).unwrap());
-
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2002", "key3"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2003", "key4"));
         bucket.update(node2.clone());
         assert_eq!(bucket.nodes.last().unwrap(), &node2);
     }
@@ -154,12 +156,11 @@ mod tests {
     #[test]
     fn test_update_bucket_new_node() {
         let mut bucket = Bucket::new();
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key1".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key2".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key3".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key4".into()).unwrap());
-
-        let node = NodeInfo::new("127.0.0.1", 2002, "new_key".into()).unwrap();
+        let _ = bucket.push_back(create_node_info("127.0.0.1:1999", "key1"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2000", "key2"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2001", "key3"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2002", "key4"));
+        let node = create_node_info("127.0.0.1:2002", "new_key");
 
         bucket.update(node.clone());
         assert_eq!(bucket.nodes.last().unwrap(), &node);
@@ -170,19 +171,20 @@ mod tests {
     fn test_update_full_bucket_new_node() {
         let mut bucket = Bucket::new();
 
-        let node1 = NodeInfo::new("127.0.0.1", 2002, "key1".into()).unwrap();
+        let node1 = create_node_info("127.0.0.1:2002", "key1");
         let _ = bucket.push_back(node1.clone());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2001, "key2".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key3".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key4".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key5".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key6".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key7".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key8".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key9".into()).unwrap());
-        let _ = bucket.push_back(NodeInfo::new("127.0.0.1", 2002, "key10".into()).unwrap());
 
-        let node = NodeInfo::new("127.0.0.1", 2002, "new_key".into()).unwrap();
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2001", "key2"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2002", "key3"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2003", "key4"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2004", "key5"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2005", "key6"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2003", "key7"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2004", "key8"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2005", "key9"));
+        let _ = bucket.push_back(create_node_info("127.0.0.1:2005", "key10"));
+
+        let node = create_node_info("127.0.0.1:2002", "new_key");
 
         bucket.update(node.clone());
         assert_eq!(bucket.nodes.last().unwrap(), &node1);

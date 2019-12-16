@@ -21,11 +21,21 @@ use {
     node::Node,
     request::Request,
     rpc::Rpc,
-    std::{env, net::SocketAddrV4, sync::Arc},
+    std::{net::SocketAddrV4, sync::Arc},
 };
 
-async fn start(host: SocketAddrV4) -> Result<()> {
+async fn start(host: SocketAddrV4, neighbor: Option<SocketAddrV4>) -> Result<()> {
     let node = Arc::new(RwLock::new(Node::new(host)?));
+
+    // Ping neighbor
+    if let Some(n) = neighbor {
+        let req = Request::new(Some(host.into()), Rpc::Ping, n.into());
+        let res = req.send().await;
+        println!("{:?}", res);
+        let mut node = node.write().await;
+        node.update_bucket(n.into());
+    }
+
     let listener = TcpListener::bind(host).await?;
     let mut incoming = listener.incoming();
     while let Some(Ok(stream)) = incoming.next().await {
@@ -49,7 +59,11 @@ async fn connection_loop(stream: TcpStream, node: Arc<RwLock<Node>>) -> Result<(
         let req = deserialized.unwrap();
         println!("{:?}", req);
         match req.get_rpc() {
-            Rpc::Ping => unimplemented!("unimplemented PING"),
+            Rpc::Ping => {
+                let mut stream = &*stream;
+                stream.write("PONG".as_bytes()).await?;
+                stream.write(b"\n").await?;
+            }
             Rpc::FindValue(k) => {
                 let node = node.read().await;
                 if let Some(v) = node.find_value(&k) {
@@ -89,10 +103,8 @@ async fn main() {
         .value_of("neighbor")
         .map(|s| s.parse().expect("Invalid host string"));
 
-    // Ping neighbor
-
     // start a server
-    let server = start(host).await;
+    let server = start(host, neighbor).await;
     match server {
         Ok(..) => println!("Server exited"),
         Err(e) => println!("Server exited with unexpected error: {}", e),

@@ -1,7 +1,7 @@
 use {
     crate::{bucket::KBucket, error::Result, in_memory_hash_table::Table, key::Key},
     serde::{Deserialize, Serialize},
-    std::net::{Ipv4Addr, SocketAddrV4},
+    std::net::SocketAddrV4,
 };
 
 #[derive(Debug, Eq, PartialEq, Clone, Serialize, Deserialize)]
@@ -11,6 +11,10 @@ pub struct NodeInfo {
 }
 
 impl NodeInfo {
+    pub fn new(host: SocketAddrV4, id: Key) -> Self {
+        Self { host, id }
+    }
+
     pub fn get_id(&self) -> &Key {
         &self.id
     }
@@ -54,6 +58,11 @@ impl Node {
     }
 
     pub fn update_bucket(&mut self, node_info: NodeInfo) {
-        self.k_bucket.update_bucket(node_info)
+        self.k_bucket.update_bucket(node_info);
+        self.print_buckets();
+    }
+
+    pub fn print_buckets(&self) {
+        let bucket = &self.k_bucket;
     }
 }
