@@ -41,6 +41,3 @@ impl Request {
         Ok(res)
     }
 }
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Response {}

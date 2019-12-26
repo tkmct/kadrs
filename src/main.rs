@@ -6,6 +6,7 @@ mod in_memory_hash_table;
 mod key;
 mod node;
 mod request;
+mod response;
 mod rpc;
 
 use {
